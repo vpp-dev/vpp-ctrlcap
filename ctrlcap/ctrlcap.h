@@ -112,6 +112,11 @@ typedef struct {
 
     /* pre-prepared ip4 udp nsh header */
     ip4_nsh_header_t ip4_nsh_hdr;
+
+    /* hashmap of gid to sw_if_index */
+    uword *sw_if_index_by_gid;
+    /* hashmap of sw_if_index to gid */
+    uword *gid_by_sw_if_index;
 } ctrlcap_main_t;
 
 ctrlcap_main_t ctrlcap_main;

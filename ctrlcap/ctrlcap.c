@@ -176,35 +176,45 @@ int ctrlcap_enable_disable (ctrlcap_main_t * cm,
 }
 
 int ctrlcap_set (ctrlcap_main_t * cm, u32 sw_if_index,
-                            u32 sw_if_gid, int enable_disable)
+                 u32 sw_if_gid, int enable_disable)
 {
-  vnet_sw_interface_t * sw;
-  int rv;
-  u32 node_index = enable_disable ? ctrlcap_punt_node.index : ~0;
+    vnet_sw_interface_t * sw;
+    int rv;
+    u32 node_index = enable_disable ? ctrlcap_punt_node.index : ~0;
 
-  if (!cm->is_enabled)
-      return -200; // FIXME!
+    if (!cm->is_enabled)
+        return -200; // FIXME!
 
-  /* Utterly wrong? */
-  if (pool_is_free_index (cm->vnet_main->interface_main.sw_interfaces, 
-                          sw_if_index))
-    return VNET_API_ERROR_INVALID_SW_IF_INDEX;
+    /* Utterly wrong? */
+    if (pool_is_free_index (cm->vnet_main->interface_main.sw_interfaces,
+                            sw_if_index))
+        return VNET_API_ERROR_INVALID_SW_IF_INDEX;
 
-  /* Not a physical port? */
-  sw = vnet_get_sw_interface (cm->vnet_main, sw_if_index);
-  if (sw->type != VNET_SW_INTERFACE_TYPE_HARDWARE)
-    return VNET_API_ERROR_INVALID_SW_IF_INDEX;
-  
-  /* 
-   * Redirect pkts from the driver to the ctrlcap node.
-   * Returns VNET_API_ERROR_UNIMPLEMENTED if the h/w driver
-   * doesn't implement the API. 
-   *
-   * Node_index = ~0 => shut off redirection
-   */
-  rv = vnet_hw_interface_rx_redirect_to_node (cm->vnet_main, sw_if_index,
-                                              node_index);
-  return rv;
+    /* Not a physical port? */
+    sw = vnet_get_sw_interface (cm->vnet_main, sw_if_index);
+    if (sw->type != VNET_SW_INTERFACE_TYPE_HARDWARE)
+        return VNET_API_ERROR_INVALID_SW_IF_INDEX;
+    
+    /* 
+     * Redirect pkts from the driver to the ctrlcap node.
+     * Returns VNET_API_ERROR_UNIMPLEMENTED if the h/w driver
+     * doesn't implement the API. 
+     *
+     * Node_index = ~0 => shut off redirection
+     */
+    rv = vnet_hw_interface_rx_redirect_to_node (cm->vnet_main, sw_if_index,
+                                                node_index);
+    if (rv == 0) {
+        // if everything worked update interface id maps
+        if (enable_disable) {
+            hash_set(cm->sw_if_index_by_gid, sw_if_gid, sw_if_index);
+            hash_set(cm->gid_by_sw_if_index, sw_if_index, sw_if_gid);
+        } else {
+            hash_unset(cm->sw_if_index_by_gid, sw_if_gid);
+            hash_unset(cm->gid_by_sw_if_index, sw_if_index);
+        }
+    }
+    return rv;
 }
 
 static clib_error_t *
@@ -384,6 +394,9 @@ static clib_error_t * ctrlcap_init (vlib_main_t * vm)
       ((char *) name, VL_MSG_FIRST_AVAILABLE);
 
   error = ctrlcap_plugin_api_hookup (vm);
+
+  cm->sw_if_index_by_gid = hash_create(0, sizeof (u32));
+  cm->gid_by_sw_if_index = hash_create(0, sizeof (u32));
 
   vec_free(name);
 
