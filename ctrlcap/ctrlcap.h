@@ -89,7 +89,7 @@ typedef struct {
 typedef CLIB_PACKED (struct {
     ip4_header_t ip4;            /* 20 bytes */
     udp_header_t udp;            /* 8 bytes */
-    nsh_header_t nsh;        /* 8 bytes */
+    nsh_header_t nsh;            /* 8 bytes */
 }) ip4_nsh_header_t;
 
 typedef struct {
@@ -113,6 +113,9 @@ typedef struct {
     /* pre-prepared ip4 udp nsh header */
     ip4_nsh_header_t ip4_nsh_hdr;
 
+    /* index of interface receiving nsh encapsulated data */
+    u32 in_sw_if_index;
+
     /* hashmap of gid to sw_if_index */
     uword *sw_if_index_by_gid;
     /* hashmap of sw_if_index to gid */
@@ -122,5 +125,6 @@ typedef struct {
 ctrlcap_main_t ctrlcap_main;
 
 vlib_node_registration_t ctrlcap_punt_node;
+vlib_node_registration_t ctrlcap_inject_node;
 
 #endif /* __included_ctrlcap_h__ */

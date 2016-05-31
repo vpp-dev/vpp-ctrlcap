@@ -13,10 +13,10 @@
 
 AUTOMAKE_OPTIONS = foreign subdir-objects
 
-AM_CFLAGS = -Wall -I@TOOLKIT_INCLUDE@
+AM_CFLAGS = -Wall -I@TOOLKIT_INCLUDE@ -g
 
 lib_LTLIBRARIES = ctrlcap_plugin.la ctrlcap_test_plugin.la
-ctrlcap_plugin_la_SOURCES = ctrlcap/ctrlcap.c ctrlcap/punt_node.c \
+ctrlcap_plugin_la_SOURCES = ctrlcap/ctrlcap.c ctrlcap/punt_node.c ctrlcap/inject_node.c \
 	ctrlcap/ctrlcap_plugin.api.h 
 ctrlcap_plugin_la_LDFLAGS = -module
 

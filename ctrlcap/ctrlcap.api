@@ -25,6 +25,9 @@ define ctrlcap_enable_disable {
     /* Enable / disable the feature for given interface */
     u8 enable_disable;
 
+    /* Inject interface (receiving nsh encapsulated data) */
+    u32 in_sw_if_index;
+
     /* source ip4 address of UDP + NSH packets */
     u32 src_address;
     /* source port of UDP + NSH packets */
